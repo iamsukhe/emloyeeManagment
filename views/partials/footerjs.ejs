@@ -1,0 +1,250 @@
+<script
+  src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"
+  integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ=="
+  crossorigin="anonymous"
+  referrerpolicy="no-referrer"
+></script>
+<script>
+  $(document).on("click", ".delete", async (e) => {
+    let userId = e.target.id;
+    console.log(userId);
+    try {
+      const reqBody = JSON.stringify({ id: userId });
+      const response = await fetch("/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: reqBody,
+      });
+      const data = await response.json();
+      console.log(data);
+      if (data.errorcode === 0) {
+        location.reload();
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Oops...",
+          text: "Something went wrong!",
+        });
+      }
+    } catch (ex) {
+      Swal.fire({
+        icon: "error",
+        title: "Oops...",
+        text: "Something went wrong!",
+      });
+    }
+  });
+
+  document
+    .querySelector("#filter")
+    .addEventListener("submit", async function (e) {
+      e.preventDefault(); //stop form from submitting
+      const fname = $("#filter-name").val(),
+        femail = $("#filter-email").val(),
+        fetype = $("#filter-etype").val();
+
+      if (!fname && !femail && !fetype) {
+        return;
+      }
+
+      try {
+        const reqBody = JSON.stringify({
+          name: fname,
+          email: femail,
+          etype: fetype,
+        });
+
+        const response = await fetch("/filter", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: reqBody,
+        });
+        const data = await response.json();
+        if (data.errorcode === 0) {
+          let html = "";
+
+          if (data.data.length == 0) {
+            html += `<tr>
+        <th scope="row">No Record Found</th> 
+       </tr>`;
+            document.getElementById("tbody").innerHTML = html;
+          } else {
+            data.data.forEach((user, index) => {
+              html += `<tr>
+        <th scope="row">${index + 1}</th>
+        <td>${user.name}</td>
+        <td>${user.email}</td>
+        <td>${user.etype}</td>
+        <td>${user.hourlyRate}</td>
+        <td>${user.totalRate}</td>
+        <td>${user.totalAmount}</td>
+        <td> <i id="${user._id}" class="fa-solid fa-trash delete"></i> </td>
+        <td>
+          <i
+            data-bs-toggle="modal"
+            data-bs-target="#exampleModal"
+            data-bs-id="${user._id}"
+            data-bs-name="${user.name}"
+            data-bs-email="${user.email}"
+            data-bs-etype="${user.etype}"
+            data-bs-hourlyRate="${user.hourlyRate}"
+            data-bs-totalRate="${user.totalRate}"
+            data-bs-totalAmount="${user.totalAmount}"
+            class="fa-solid fa-pen-to-square"
+          ></i>
+        </td>
+       </tr>`;
+            });
+
+            document.getElementById("tbody").innerHTML = html;
+          }
+
+          console.log(data);
+        } else {
+          Swal.fire({
+            icon: "error",
+            title: "Oops...",
+            text: "Something went wrong!",
+          });
+        }
+      } catch (ex) {
+        Swal.fire({
+          icon: "error",
+          title: "Oops...",
+          text: "Something went wrong!",
+        });
+      }
+    });
+
+  let exampleModal = document.getElementById("exampleModal");
+  exampleModal.addEventListener("show.bs.modal", function (event) {
+    // Button that triggered the modal
+    let button = event.relatedTarget;
+    // Extract info from data-bs-* attributes
+    let id = button.getAttribute("data-bs-id");
+    let dataEmail = button.getAttribute("data-bs-email");
+    let dataName = button.getAttribute("data-bs-name");
+    let dataEtype = button.getAttribute("data-bs-etype");
+    let dataHourlyRate = button.getAttribute("data-bs-hourlyRate");
+    let dataTotalRate = button.getAttribute("data-bs-totalRate");
+    let dataTotalAmount = button.getAttribute("data-bs-totalAmount");
+    // If necessary, you could initiate an AJAX request here
+    // and then do the updating in a callback.
+    //
+    // Update the modal's content.
+    let modalTitle = exampleModal.querySelector(".modal-title");
+    let email = exampleModal.querySelector("#edit-email");
+    let name = exampleModal.querySelector("#edit-name");
+    let etype = exampleModal.querySelector("#edit-etype");
+    let hourlyRate = exampleModal.querySelector("#edit-hourlyRate");
+    let totalRate = exampleModal.querySelector("#edit-totalRate");
+    let totalAmount = exampleModal.querySelector("#edit-totalAmount");
+    let userId = exampleModal.querySelector("#edit-userId");
+
+    modalTitle.textContent = "Edit Record of " + dataName;
+    email.value = dataEmail;
+    name.value = dataName;
+    etype.value = dataEtype;
+    hourlyRate.value = dataHourlyRate;
+    totalRate.value = dataTotalRate;
+    totalAmount.value = dataTotalAmount;
+    userId.value = id;
+  });
+
+  document
+    .querySelector("#edit")
+    .addEventListener("submit", async function (e) {
+      e.preventDefault(); //stop form from submitting
+      let email = $("#edit-email").val();
+      let name = $("#edit-name").val();
+      let etype = $("#edit-etype").val();
+      let hourlyRate = $("#edit-hourlyRate").val();
+      let totalRate = $("#edit-totalRate").val();
+      let totalAmount = $("#edit-totalAmount").val();
+      let userId = $("#edit-userId").val();
+
+      if (
+        !email &&
+        !name &&
+        !etype &&
+        !hourlyRate &&
+        !totalRate &&
+        !totalAmount &&
+        !userId
+      ) {
+        return;
+      }
+
+      try {
+        const reqBody = JSON.stringify({
+          email: email,
+          name: name,
+          etype: etype,
+          hourlyRate: hourlyRate,
+          totalRate: totalRate,
+          totalAmount: totalAmount,
+          id: userId,
+        });
+
+        const response = await fetch("/edit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: reqBody,
+        });
+        const data = await response.json();
+        if (data.errorcode === 0) {
+          let html = "";
+
+          if (data.data.length == 0) {
+            html += `<tr>
+        <th scope="row">No Record Found</th> 
+       </tr>`;
+            document.getElementById("tbody").innerHTML = html;
+          } else {
+            data.data.forEach((user, index) => {
+              html += `<tr>
+        <th scope="row">${index + 1}</th>
+        <td>${user.name}</td>
+        <td>${user.email}</td>
+        <td>${user.etype}</td>
+        <td>${user.hourlyRate}</td>
+        <td>${user.totalRate}</td>
+        <td>${user.totalAmount}</td>
+        <td> <i id="${user._id}" class="fa-solid fa-trash delete"></i> </td>
+        <td>
+          <i
+            data-bs-toggle="modal"
+            data-bs-target="#exampleModal"
+            data-bs-id="${user._id}"
+            data-bs-name="${user.name}"
+            data-bs-email="${user.email}"
+            data-bs-etype="${user.etype}"
+            data-bs-hourlyRate="${user.hourlyRate}"
+            data-bs-totalRate="${user.totalRate}"
+            data-bs-totalAmount="${user.totalAmount}"
+            class="fa-solid fa-pen-to-square"
+          ></i>
+        </td>
+       </tr>`;
+            });
+
+            document.getElementById("tbody").innerHTML = html;
+          }
+
+          $("#exampleModal").modal("hide");
+        } else {
+          Swal.fire({
+            icon: "error",
+            title: "Oops...",
+            text: "Something went wrong!",
+          });
+        }
+      } catch (ex) {
+        Swal.fire({
+          icon: "error",
+          title: "Oops...",
+          text: "Something went wrong!",
+        });
+      }
+    });
+</script>
